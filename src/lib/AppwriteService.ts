@@ -46,6 +46,11 @@ export const AppwriteService = {
 			name
 		});
 	},
+	editHabitData: async (habitId: string, data: string) => {
+		return await databases.updateDocument<Habit>('main', 'habits', habitId, {
+			data
+		});
+	},
 	deleteHabit: async (habitId: string) => {
 		return await databases.deleteDocument('main', 'habits', habitId);
 	},

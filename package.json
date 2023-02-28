@@ -32,6 +32,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"appwrite": "^10.2.0"
+		"appwrite": "^10.2.0",
+		"chart.js": "^4.2.1"
 	}
 }

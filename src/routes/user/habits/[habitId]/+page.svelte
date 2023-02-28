@@ -1,45 +1,121 @@
 <script lang="ts">
+	import Chart from 'chart.js/auto';
+
 	import { goto, invalidateAll } from '$app/navigation';
 	import { AppwriteService } from '$lib/AppwriteService';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
+	import { browser } from '$app/environment';
 
 	export let data: PageData;
-
-	const jsConfetti = new JSConfetti();
 
 	const json: {
 		[key: string]: {
 			points: number;
 			momentum: number;
+			completed: boolean;
 		};
 	} = JSON.parse(data.habit?.data ?? '{}');
 
+	function updateJson() {
+		let firstDay = null;
+		let firstDayTime = -1;
+
+		for (const dateKey in json) {
+			if (json[dateKey].completed) {
+				const date = new Date(dateKey);
+				if (firstDayTime === -1 || firstDayTime > date.getTime()) {
+					firstDayTime = date.getTime();
+					firstDay = dateKey;
+				}
+			}
+		}
+
+		if (firstDay === null) {
+			for (const dateKey in json) {
+				json[dateKey].points = 0;
+				json[dateKey].momentum = 0;
+			}
+			return;
+		}
+
+		let loopDate = new Date(firstDay);
+		const timeNow = Date.now();
+		let lastCompleted = false;
+		let momentum = 0;
+		let points = 0;
+
+		while (loopDate.getTime() <= timeNow) {
+			const key = loopDate.toISOString().substring(0, 10);
+
+			const completed = json[key] && json[key].completed ? true : false;
+
+			if (lastCompleted) {
+				if (completed) {
+					momentum++;
+				} else {
+					momentum = -1;
+				}
+			} else {
+				if (completed) {
+					momentum = 1;
+				} else {
+					momentum--;
+				}
+			}
+
+			if (!json[key]) {
+				json[key] = {
+					points: 0,
+					momentum: 0,
+					completed: false
+				};
+			}
+
+			points += momentum;
+			points = Math.max(points, 0);
+
+			json[key].momentum = momentum;
+			json[key].points = points;
+
+			lastCompleted = completed;
+
+			loopDate.setDate(loopDate.getDate() + 1);
+		}
+	}
+
 	function getDateData(date: Date) {
-		const key = `${date.getDate()}_${date.getMonth()}_${date.getFullYear()}`;
+		const key = date.toISOString().substring(0, 10);
 
 		return (
 			json[key] ?? {
 				points: 0,
-				momentum: 0
+				momentum: 0,
+				completed: false
 			}
 		);
 	}
 
 	function toggleDay(date: Date) {
-		const key = `${date.getDate()}_${date.getMonth()}_${date.getFullYear()}`;
-		if (!json[key] || json[key].momentum < 0) {
+		const key = date.toISOString().substring(0, 10);
+
+		if (!json[key]) {
 			json[key] = {
 				points: 0,
-				momentum: 1
-			};
-			jsConfetti.addConfetti();
-		} else {
-			json[key] = {
-				points: 0,
-				momentum: -1
+				momentum: 0,
+				completed: false
 			};
 		}
+
+		json[key].completed = !json[key].completed;
+
+		if (json[key].completed === false) {
+			delete json[key];
+		}
+
+		updateJson();
+		updateChart();
+		onEditData();
 	}
 
 	async function onEditName() {
@@ -48,6 +124,11 @@
 			await AppwriteService.editHabitName(data.habit?.$id ?? '', name);
 			await invalidateAll();
 		}
+	}
+
+	async function onEditData() {
+		await AppwriteService.editHabitData(data.habit?.$id ?? '', JSON.stringify(json));
+		await invalidateAll();
 	}
 
 	async function onDelete() {
@@ -82,6 +163,89 @@
 		date.setDate(date.getDate() - 1);
 		days = [date, ...days];
 	}
+
+	let chart: any = null;
+
+	function generateChartData(): any {
+		const dates = Object.keys(json).sort((a, b) => {
+			return new Date(a).getTime() < new Date(b).getTime() ? -1 : 1;
+		});
+
+		const dataArr = [];
+
+		for(const date of dates) {
+			dataArr.push(json[date].points);
+		}
+
+		return {
+			labels: dates.map((d) => {
+				const name = d.split("-");
+				return `${+name[2]}.${+name[1]}`
+			}),
+			datasets: [
+				{
+					label: 'Points',
+					tension: 0.4,
+					data: dataArr,
+					borderWidth: 1,
+					borderColor: '#22c55e',
+					fill: true,
+					backgroundColor: '#dcfce7',
+					pointStyle: false
+				}
+			]
+		};
+	}
+
+	function updateChart() {
+		const ctx: any = document.getElementById('chart');
+		if (ctx) {
+			if (!chart) {
+				chart = new Chart(ctx, {
+					type: 'line',
+					data: generateChartData(),
+					options: {
+						responsive: true,
+						plugins: {
+							title: {
+								display: false
+							},
+							legend: {
+								display: false
+							}
+						},
+						interaction: {
+							intersect: false
+						},
+						scales: {
+							x: {
+								display: true,
+								title: {
+									display: true
+								}
+							},
+							y: {
+								display: false,
+								title: {
+									display: false
+								},
+								min: 0
+							}
+						}
+					}
+				});
+			} else {
+				chart.data = generateChartData();
+				chart.update();
+			}
+		}
+	}
+
+	onMount(() => {
+		if (browser) {
+			updateChart();
+		}
+	});
 </script>
 
 {#if data.habit}
@@ -117,7 +281,6 @@
 					{@const dayJson = getDateData(day)}
 					<button
 						on:click={() => toggleDay(day)}
-						id={`${day.getDate()}_${day.getMonth()}_${day.getFullYear()}`}
 						class="col-span-1 relative rounded-md p-3 bg-white border border-gray-300 text-center"
 					>
 						<div
@@ -130,7 +293,7 @@
 										: dayJson.momentum > 0
 										? 'bg-green-500 text-white'
 										: 'bg-black text-white'
-								} text-xs rounded-full`}>{dayJson.momentum}</span
+								} text-xs rounded-full`}>{dayJson.momentum > 0 ? '+' : ''}{dayJson.momentum}</span
 							>
 						</div>
 
@@ -139,6 +302,12 @@
 					</button>
 				{/each}
 			{/key}
+		</div>
+
+		<div class="bg-white border border-gray-300 p-3 rounded-md flex flex-col gap-3 mt-2">
+			<h4 class="font-bold text-gray-900 text-xl">Your momentum</h4>
+
+			<canvas id="chart" />
 		</div>
 	</div>
 {:else}
