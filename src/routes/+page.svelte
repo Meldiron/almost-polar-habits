@@ -9,8 +9,7 @@
 				<div>
 					<p class="text-4xl tracking-tighter text-black lg:text-5xl">Almost Polar Habits</p>
 					<p class="max-w-xl mt-4 text-lg tracking-tight text-gray-600">
-						A guilt-free habit tracker that focuses on creating a positive, fun, encouraging
-						environment for tracking your habits.
+						Habit tracker with focus on momentum instead of streaks. This tracker helps you build challenging habits and stay motivated even when you fail.
 					</p>
 				</div>
 				<div class="flex flex-col gap-3 mt-10 sm:flex-row">

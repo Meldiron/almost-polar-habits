@@ -1,5 +1,5 @@
 {
-    "projectId": "almostPolarHabits",
+    "projectId": "almostPolarHabitsV2",
     "projectName": "Almost Polar Habits",
     "collections": [
         {
@@ -20,62 +20,14 @@
                     "array": false,
                     "size": 255,
                     "default": null
-                }
-            ],
-            "indexes": []
-        },
-        {
-            "$id": "records",
-            "$permissions": [],
-            "databaseId": "main",
-            "name": "records",
-            "enabled": true,
-            "documentSecurity": false,
-            "attributes": [
+                },
                 {
-                    "key": "habitId",
+                    "key": "data",
                     "type": "string",
                     "status": "available",
                     "required": true,
                     "array": false,
-                    "size": 255,
-                    "default": null
-                },
-                {
-                    "key": "completed",
-                    "type": "boolean",
-                    "status": "available",
-                    "required": true,
-                    "array": false,
-                    "default": null
-                },
-                {
-                    "key": "momentum",
-                    "type": "integer",
-                    "status": "available",
-                    "required": true,
-                    "array": false,
-                    "min": -9223372036854775808,
-                    "max": 9223372036854775807,
-                    "default": null
-                },
-                {
-                    "key": "points",
-                    "type": "integer",
-                    "status": "available",
-                    "required": true,
-                    "array": false,
-                    "min": -9223372036854775808,
-                    "max": 9223372036854775807,
-                    "default": null
-                },
-                {
-                    "key": "date",
-                    "type": "datetime",
-                    "status": "available",
-                    "required": true,
-                    "array": false,
-                    "format": "",
+                    "size": 1000000,
                     "default": null
                 }
             ],

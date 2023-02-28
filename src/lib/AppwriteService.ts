@@ -4,18 +4,19 @@ import { AccountStore } from './stores/AccountStore';
 
 export type Habit = {
 	name: string;
+	data: string;
 } & Models.Document;
 
 const client = new Client()
 	.setEndpoint('https://appwrite.polarhabits.almostapps.eu/v1')
-	.setProject('almostPolarHabits');
+	.setProject('almostPolarHabitsV2');
 
 const account = new Account(client);
 const databases = new Databases(client);
 
 export const AppwriteService = {
 	login: () => {
-		account.createOAuth2Session('github', 'http://localhost:5173/user', 'http://localhost:5173/sign-in');
+		account.createOAuth2Session('github', `${window.location.origin}/user`, `${window.location.origin}/sign-in`);
 	},
 	logout: async () => {
 		await account.deleteSession('current');
@@ -32,7 +33,8 @@ export const AppwriteService = {
 		const userId = get(AccountStore)?.$id ?? '';
 
 		return await databases.createDocument<Habit>('main', 'habits', ID.unique(), {
-			name
+			name,
+			data: JSON.stringify({})
 		}, [
 			Permission.read(Role.user(userId)),
 			Permission.update(Role.user(userId)),
@@ -48,14 +50,14 @@ export const AppwriteService = {
 		return await databases.deleteDocument('main', 'habits', habitId);
 	},
 	getHabits: async () => {
-		return (await databases.listDocuments('main', 'habits', [
+		return (await databases.listDocuments<Habit>('main', 'habits', [
 			Query.limit(20),
 			Query.orderDesc('$createdAt')
 		])).documents;
 	},
 	getHabit: async (habitId: string) => {
 		try {
-			return await databases.getDocument('main', 'habits', habitId);
+			return await databases.getDocument<Habit>('main', 'habits', habitId);
 		} catch(err) {
 			console.error(err);
 			return null;
