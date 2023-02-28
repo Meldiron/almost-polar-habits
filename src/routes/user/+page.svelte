@@ -1,4 +1,4 @@
-<div class="bg-white border border-gray-300 p-3 rounded-md flex flex-col gap-2">
+<div class="bg-white border border-gray-300 p-3 rounded-md flex flex-col gap-3">
 	<h3 class="text-4xl">👋</h3>
 
 	<div>

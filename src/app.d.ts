@@ -9,4 +9,6 @@ declare global {
 	}
 }
 
+declare const Confetti: any;
+
 export {};
