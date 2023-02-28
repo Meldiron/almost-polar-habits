@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { goto, invalidate } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { AppwriteService } from '$lib/AppwriteService';
 	import { AccountStore } from '$lib/stores/AccountStore';
 	import type { LayoutData } from './$types';
@@ -16,13 +16,17 @@
 	async function onSignout() {
 		await AppwriteService.logout();
 		AccountStore.set(null);
-		goto('/');
+		await goto('/');
 	}
 
 	async function onNewHabit() {
-		const name = prompt("Enter habit:") ?? 'Unnamed Habbit';
-		await AppwriteService.createHabit(name);
-		invalidate('habbits');
+		const name = prompt("Enter habit:");
+
+		if(name) {
+			const habit = await AppwriteService.createHabit(name);
+			await goto(`/user/habits/${habit.$id}`);
+			await invalidateAll();
+		}
 	}
 
 	let open = false;
@@ -93,7 +97,8 @@
 		<div class="grid grid-cols-12 gap-6">
 			<div class="col-span-12 lg:col-span-4 flex flex-col gap-3">
 				{#each data.habits as habit}
-					<button
+					<a
+						href={`/user/habits/${habit.$id}`}
 						class="flex overflow-y-auto border bg-black text-white border-black rounded-md p-3 items-center justify-between"
 					>
 						<h3 class="font-bold">{habit.name}</h3>
@@ -112,7 +117,7 @@
 								d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
 							/>
 						</svg>
-					</button>
+					</a>
 				{/each}
 
 				<button

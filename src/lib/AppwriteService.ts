@@ -24,6 +24,7 @@ export const AppwriteService = {
 		try {
 			return await account.get();
 		} catch(err) {
+			console.error(err);
 			return null;
 		}
 	},
@@ -51,5 +52,13 @@ export const AppwriteService = {
 			Query.limit(20),
 			Query.orderDesc('$createdAt')
 		])).documents;
+	},
+	getHabit: async (habitId: string) => {
+		try {
+			return await databases.getDocument('main', 'habits', habitId);
+		} catch(err) {
+			console.error(err);
+			return null;
+		}
 	}
 };
