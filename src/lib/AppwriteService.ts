@@ -5,6 +5,7 @@ import { AccountStore } from './stores/AccountStore';
 export type Habit = {
 	name: string;
 	data: string;
+	difficulty: string;
 } & Models.Document;
 
 const client = new Client()
@@ -34,6 +35,7 @@ export const AppwriteService = {
 
 		return await databases.createDocument<Habit>('main', 'habits', ID.unique(), {
 			name,
+			difficulty: 'easy',
 			data: JSON.stringify({})
 		}, [
 			Permission.read(Role.user(userId)),
@@ -44,6 +46,11 @@ export const AppwriteService = {
 	editHabitName: async (habitId: string, name: string) => {
 		return await databases.updateDocument<Habit>('main', 'habits', habitId, {
 			name
+		});
+	},
+	editHabitDifficulty: async (habitId: string, difficulty: string) => {
+		return await databases.updateDocument<Habit>('main', 'habits', habitId, {
+			difficulty
 		});
 	},
 	editHabitData: async (habitId: string, data: string) => {

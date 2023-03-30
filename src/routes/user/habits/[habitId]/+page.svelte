@@ -17,6 +17,9 @@
 		};
 	} = JSON.parse(data.habit?.data ?? '{}');
 
+	let difficulty = data.habit?.difficulty ?? 'easy';
+	let multiplier = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 3 : 5;
+
 	function updateJson() {
 		let firstDay = null;
 		let firstDayTime = -1;
@@ -40,6 +43,7 @@
 		}
 
 		let loopDate = new Date(firstDay);
+		loopDate.setHours(4);
 		const timeNow = Date.now();
 		let lastCompleted = false;
 		let momentum = 0;
@@ -54,13 +58,13 @@
 				if (completed) {
 					momentum++;
 				} else {
-					momentum = -1;
+					momentum = -1 * multiplier;
 				}
 			} else {
 				if (completed) {
 					momentum = 1;
 				} else {
-					momentum--;
+					momentum -= 1 * multiplier;
 				}
 			}
 
@@ -173,14 +177,14 @@
 
 		const dataArr = [];
 
-		for(const date of dates) {
+		for (const date of dates) {
 			dataArr.push(json[date].points);
 		}
 
 		return {
 			labels: dates.map((d) => {
-				const name = d.split("-");
-				return `${+name[2]}.${+name[1]}`
+				const name = d.split('-');
+				return `${+name[2]}.${+name[1]}`;
 			}),
 			datasets: [
 				{
@@ -239,6 +243,36 @@
 				chart.update();
 			}
 		}
+	}
+
+	async function onMakeEasier() {
+		const newDifficulty = difficulty === 'medium' ? 'easy' : 'medium';
+
+		await AppwriteService.editHabitDifficulty(data.habit?.$id ?? '', newDifficulty);
+
+		difficulty = newDifficulty;
+		multiplier = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 3 : 5;
+
+		updateJson();
+		updateChart();
+		onEditData();
+
+		await invalidateAll();
+	}
+
+	async function onMakeHarder() {
+		const newDifficulty = difficulty === 'medium' ? 'hard' : 'medium';
+
+		await AppwriteService.editHabitDifficulty(data.habit?.$id ?? '', newDifficulty);
+
+		difficulty = newDifficulty;
+		multiplier = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 3 : 5;
+
+		updateJson();
+		updateChart();
+		onEditData();
+
+		await invalidateAll();
 	}
 
 	onMount(() => {
@@ -308,6 +342,34 @@
 			<h4 class="font-bold text-gray-900 text-xl">Your momentum</h4>
 
 			<canvas id="chart" />
+		</div>
+
+		<div class="bg-white border border-gray-300 p-3 rounded-md flex flex-col gap-3">
+			<div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
+				<h4 style="text-transform: capitalize" class="font-bold text-gray-900 text-xl">{difficulty} Difficulty</h4>
+
+				<div class="flex items-center justify-end gap-1">
+					{#if difficulty !== 'easy'}
+						<button
+							on:click={onMakeEasier}
+							class="relative inline-flex justify-center flex-none px-3 py-3 ml-1 overflow-hidden text-sm font-medium text-slate-900 transition-colors bg-slate-100 rounded-xl outline-2 outline-offset-2 before:absolute before:inset-0 active:before:bg-transparent hover:before:bg-white/10 active:bg-slate-200 active:text-slate-700 before:transition-colors"
+							type="button"
+						>
+							<span class="inline"> Make Easier </span>
+						</button>
+					{/if}
+
+					{#if difficulty !== 'hard'}
+						<button
+							on:click={onMakeHarder}
+							class="relative inline-flex justify-center flex-none px-3 py-3 ml-1 overflow-hidden text-sm font-medium text-slate-900 transition-colors bg-slate-100 rounded-xl outline-2 outline-offset-2 before:absolute before:inset-0 active:before:bg-transparent hover:before:bg-white/10 active:bg-slate-200 active:text-slate-700 before:transition-colors"
+							type="button"
+						>
+							<span class="inline"> Make Hadrer </span>
+						</button>
+					{/if}
+				</div>
+			</div>
 		</div>
 	</div>
 {:else}
