@@ -6,6 +6,7 @@ export type Habit = {
 	name: string;
 	data: string;
 	difficulty: string;
+	negativeAllowed: boolean;
 } & Models.Document;
 
 const client = new Client()
@@ -51,6 +52,11 @@ export const AppwriteService = {
 	editHabitDifficulty: async (habitId: string, difficulty: string) => {
 		return await databases.updateDocument<Habit>('main', 'habits', habitId, {
 			difficulty
+		});
+	},
+	editHabitNegativeAllowed: async (habitId: string, negativeAllowed: boolean) => {
+		return await databases.updateDocument<Habit>('main', 'habits', habitId, {
+			negativeAllowed
 		});
 	},
 	editHabitData: async (habitId: string, data: string) => {
