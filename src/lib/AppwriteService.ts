@@ -37,6 +37,7 @@ export const AppwriteService = {
 		return await databases.createDocument<Habit>('main', 'habits', ID.unique(), {
 			name,
 			difficulty: 'easy',
+			negativeAllowed: false,
 			data: JSON.stringify({})
 		}, [
 			Permission.read(Role.user(userId)),
