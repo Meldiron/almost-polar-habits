@@ -1,25 +1,24 @@
 <script lang="ts">
 	import Chart from 'chart.js/auto';
 
-	import { goto, invalidateAll } from '$app/navigation';
+	import { afterNavigate, goto, invalidateAll } from '$app/navigation';
 	import { AppwriteService } from '$lib/AppwriteService';
-	import { onMount } from 'svelte';
+	import { beforeUpdate, onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { browser } from '$app/environment';
 
 	export let data: PageData;
 
-	const json: {
-		[key: string]: {
-			points: number;
-			momentum: number;
-			completed: boolean;
-		};
-	} = JSON.parse(data.habit?.data ?? '{}');
-
-	let difficulty = data.habit?.difficulty ?? 'easy';
-	let multiplier = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 3 : 5;
-	let negativeAllowed = data.habit?.negativeAllowed ?? false;
+	let json: any = null;
+	let difficulty: any = null;
+	let multiplier: any = null;
+	let negativeAllowed: any = null;
+	$: {
+		json = JSON.parse(data.habit?.data ?? '{}');
+		difficulty = data.habit?.difficulty ?? 'easy';
+		multiplier = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 3 : 5;
+		negativeAllowed = data.habit?.negativeAllowed ?? false;
+	}
 
 	function updateJson() {
 		let firstDay = null;
@@ -163,14 +162,6 @@
 	];
 	let days: Date[] = [];
 
-	let date = new Date();
-	days.push(date);
-	for (let i = 0; i < 6; i++) {
-		date = new Date(date);
-		date.setDate(date.getDate() - 1);
-		days = [date, ...days];
-	}
-
 	let chart: any = null;
 
 	function generateChartData(): any {
@@ -251,8 +242,7 @@
 								display: true,
 								title: {
 									display: false
-								},
-								min: negativeAllowed ? undefined : 0
+								}
 							}
 						}
 					}
@@ -307,8 +297,30 @@
 		await invalidateAll();
 	}
 
+	function init() {
+		days = [];
+
+		let date = new Date();
+		days.push(date);
+		for (let i = 0; i < 6; i++) {
+			date = new Date(date);
+			date.setDate(date.getDate() - 1);
+			days = [date, ...days];
+		}
+	}
+
 	onMount(() => {
 		if (browser) {
+			init();
+			updateJson();
+			updateChart();
+		}
+	});
+
+	afterNavigate(() => {
+		if (browser) {
+			init();
+			updateJson();
 			updateChart();
 		}
 	});
