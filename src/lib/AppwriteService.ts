@@ -10,7 +10,7 @@ export type Habit = {
 } & Models.Document;
 
 const client = new Client()
-	.setEndpoint('https://appwrite.authui.site/v1')
+	.setEndpoint('https://appwrite.polarhabits.almostapps.eu/v1')
 	.setProject('almostPolarHabitsV2');
 
 const account = new Account(client);
@@ -18,7 +18,7 @@ const databases = new Databases(client);
 
 export const AppwriteService = {
 	login: () => {
-		account.createOAuth2Session('github', `${window.location.origin}/user`, `${window.location.origin}/sign-in`);
+		account.createOAuth2Session('github', `${window.location.origin}/user`, `${window.location.origin}/`);
 	},
 	logout: async () => {
 		await account.deleteSession('current');

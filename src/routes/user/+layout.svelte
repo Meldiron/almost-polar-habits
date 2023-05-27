@@ -9,7 +9,7 @@
 
 	if (browser) {
 		if ($AccountStore === null) {
-			goto('/sign-in');
+			goto('/');
 		}
 	}
 
